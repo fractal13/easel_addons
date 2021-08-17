@@ -5,6 +5,7 @@ import sys
 import datetime
 import os
 import easel.helpers_yaml
+import easel.component
 
 def display_iso_8601(dt, ds_start_month, ds_start_day, ds_end_month, ds_end_day, ds_offset):
     s = dt.isoformat()
@@ -57,8 +58,9 @@ def get_assignment_dates(my_args):
                                               daylight_savings_end_month, daylight_savings_end_day,
                                               daylight_savings_offset)
                 
-                assignment_dates[asst] = fancy_date
-                #print(date, fancy_date, asst)
+                assignments = asst.split(",")
+                for asst in assignments:
+                    assignment_dates[asst] = fancy_date
             except ValueError as e:
                 pass
             
@@ -87,21 +89,16 @@ def main(argv):
     
     #print(assignment_dates)
     for asst in assignment_dates:
-        canvas_assignment = "{}/assignments/{}.yaml".format(my_args['canvas_dir'], asst)
+        # remove *
+        asst_name = asst.replace('*', '')
+        canvas_assignment = easel.component.gen_filename(my_args['canvas_dir']+'/assignments', asst_name)
+        ## canvas_assignment = "{}/assignments/{}.yaml".format(my_args['canvas_dir'], asst)
         if os.path.exists(canvas_assignment):
-            # fin = open(canvas_assignment, "r")
-            # data = yaml.safe_load(fin)
-            # fin.close()
-            # print(data)
-            #
-            # print(asst, assignment_dates[asst])
-            #
             easel_assignment = easel.helpers_yaml.read(canvas_assignment)
             easel_assignment.due_at = assignment_dates[asst]
-            easel.helpers_yaml.write(canvas_assignment+".foo.yaml", easel_assignment)
-            #print(easel_assignment)
+            easel.helpers_yaml.write(canvas_assignment, easel_assignment)
         else:
-            print("{} does not exist.".format(asst))
+            print("{}({}) does not exist.".format(asst, canvas_assignment))
 
     return
 
